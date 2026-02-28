@@ -4,13 +4,13 @@ gui:
       - '#f38d70'
       - bold
     inactiveBorderColor:
-      - '#72696a'
+      - '#e6d9db'
     optionsTextColor:
       - '#f38d70'
     selectedLineBgColor:
-      - '#72696a'
+      - '#413a3a'
     cherryPickedCommitBgColor:
-      - '#72696a'
+      - '#413a3a'
     cherryPickedCommitFgColor:
       - '#e6d9db'
     unstagedChangesColor:

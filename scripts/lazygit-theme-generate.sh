@@ -1,16 +1,14 @@
 #!/bin/bash
-# Generate lazygit theme from Omarchy colors.toml using theme presets
+# Generate lazygit theme using omazed approach with derivative colors
 
 COLORS_FILE=$1
-PRESETS_SCRIPT="$(dirname "$0")/../theme-mappings/presets.sh"
 
-# Check if colors file exists
 if [[ ! -f "$COLORS_FILE" ]]; then
   echo "Error: Colors file not found: $COLORS_FILE"
   exit 1
 fi
 
-# Parse colors.toml and extract values
+# Parse colors.toml
 declare -A colors
 while IFS='=' read -r key value; do
   key="${key//[\"\' ]/}"
@@ -20,45 +18,96 @@ while IFS='=' read -r key value; do
   colors["$key"]="$value"
 done <"$COLORS_FILE"
 
-# Determine theme name from colors file path
-theme_name=$(basename "$(dirname "$COLORS_FILE")")
+# Color manipulation functions
+hex_to_rgb() {
+  local hex="$1"
+  hex="${hex#\#}"
+  local r=$((16#${hex:0:2}))
+  local g=$((16#${hex:2:2}))
+  local b=$((16#${hex:4:2}))
+  echo "$r $g $b"
+}
 
-# Get preset mapping for this theme
-preset_output=$("$PRESETS_SCRIPT" "$theme_name")
+rgb_to_hex() {
+  local r="$1" g="$2" b="$3"
+  printf "#%02x%02x%02x" "$r" "$g" "$b"
+}
 
-# Parse preset into associative array
-declare -A mapping
-while IFS=':' read -r key value; do
-  key="${key// /}"
-  [[ $key ]] || continue
-  value="${value// /}"
-  mapping["$key"]="$value"
-done <<< "$preset_output"
+lighten_color() {
+  local hex="$1"
+  local factor="${2:-10}"
+  
+  read -r r g b <<< "$(hex_to_rgb "$hex")"
+  
+  r=$(( r + (255 - r) * factor / 100 ))
+  g=$(( g + (255 - g) * factor / 100 ))
+  b=$(( b + (255 - b) * factor / 100 ))
+  
+  r=$((r > 255 ? 255 : r))
+  g=$((g > 255 ? 255 : g))
+  b=$((b > 255 ? 255 : b))
+  
+  rgb_to_hex "$r" "$g" "$b"
+}
 
-# Output lazygit theme directly (no template)
+darken_color() {
+  local hex="$1"
+  local factor="${2:-10}"
+  
+  read -r r g b <<< "$(hex_to_rgb "$hex")"
+  
+  local multiplier=$((100 - factor))
+  r=$((r * multiplier / 100))
+  g=$((g * multiplier / 100))
+  b=$((b * multiplier / 100))
+  
+  r=$((r < 0 ? 0 : r))
+  g=$((g < 0 ? 0 : g))
+  b=$((b < 0 ? 0 : b))
+  
+  rgb_to_hex "$r" "$g" "$b"
+}
+
+# Determine if light or dark theme
+bg="${colors[background]}"
+bg_r=$((16#${bg:1:2}))
+bg_g=$((16#${bg:3:2}))
+bg_b=$((16#${bg:5:2}))
+bg_brightness=$((bg_r + bg_g + bg_b))
+
+# Calculate derivative colors based on theme type
+if [[ $bg_brightness -gt 382 ]]; then
+  # Light theme - darken for selection
+  selected_bg=$(darken_color "$bg" 4)
+else
+  # Dark theme - lighten for selection
+  selected_bg=$(lighten_color "$bg" 10)
+fi
+
+# Output theme
 cat << THEME
 gui:
   theme:
     activeBorderColor:
-      - '${colors[${mapping[activeBorderColor]}]}'
+      - '${colors[accent]}'
       - bold
     inactiveBorderColor:
-      - '${colors[${mapping[inactiveBorderColor]}]}'
+      - '${colors[foreground]}'
     optionsTextColor:
-      - '${colors[${mapping[optionsTextColor]}]}'
+      - '${colors[accent]}'
     selectedLineBgColor:
-      - '${colors[${mapping[selectedLineBgColor]}]}'
+      - '$selected_bg'
     cherryPickedCommitBgColor:
-      - '${colors[${mapping[cherryPickedCommitBgColor]}]}'
+      - '$selected_bg'
     cherryPickedCommitFgColor:
-      - '${colors[${mapping[cherryPickedCommitFgColor]}]}'
+      - '${colors[foreground]}'
     unstagedChangesColor:
-      - '${colors[${mapping[unstagedChangesColor]}]}'
+      - '${colors[color1]}'
     defaultFgColor:
-      - '${colors[${mapping[defaultFgColor]}]}'
+      - '${colors[foreground]}'
     searchingActiveBorderColor:
-      - '${colors[${mapping[searchingActiveBorderColor]}]}'
+      - '${colors[color3]}'
       - bold
     authorColors:
-      '*': '${colors[${mapping[authorColors]}]}'
+      '*': '${colors[accent]}'
 THEME
