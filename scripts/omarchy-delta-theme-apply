@@ -128,25 +128,25 @@ generate_delta_theme() {
     is_light="true"
   fi
   
-  # Generate background colors for minus/plus
-  local minus_bg plus_bg minus_bg_emph plus_bg_emph zero_fg
+  # Generate colors for minus/plus - use foreground colors only, no background
+  local minus_fg plus_fg minus_fg_emph plus_fg_emph zero_fg
   local file_style hunk_style
   
   if [[ "$is_light" == "true" ]]; then
-    # Light theme - use darker colors for diff
-    minus_bg=$(darken_color "$color1" 25)
-    plus_bg=$(darken_color "$color2" 25)
-    minus_bg_emph=$(darken_color "$color1" 35)
-    plus_bg_emph=$(darken_color "$color2" 35)
+    # Light theme - use darker foreground colors
+    minus_fg=$(darken_color "$color1" 20)
+    plus_fg=$(darken_color "$color2" 20)
+    minus_fg_emph="$color1"
+    plus_fg_emph="$color2"
     zero_fg=$(darken_color "$fg" 30)
     file_style="$accent"
     hunk_style="$color3"
   else
-    # Dark theme - use lighter/transparent colors
-    minus_bg=$(apply_alpha "$(lighten_color "$color1" 15)" 25)
-    plus_bg=$(apply_alpha "$(lighten_color "$color2" 15)" 25)
-    minus_bg_emph=$(apply_alpha "$(lighten_color "$color1" 25)" 35)
-    plus_bg_emph=$(apply_alpha "$(lighten_color "$color2" 25)" 35)
+    # Dark theme - use foreground colors directly
+    minus_fg=$(lighten_color "$color1" 10)
+    plus_fg=$(lighten_color "$color2" 10)
+    minus_fg_emph="$color1"
+    plus_fg_emph="$color2"
     zero_fg="$fg"
     file_style="$accent"
     hunk_style="$color3"
@@ -170,14 +170,14 @@ generate_delta_theme() {
 # Do not edit manually - this file is auto-generated
 
 [delta]
-    # Diff colors
-    minus-style = "syntax $minus_bg"
-    minus-emph-style = "syntax $minus_bg_emph"
-    minus-non-emph-style = "syntax $minus_bg"
+    # Diff colors - foreground only, no background fill
+    minus-style = "$minus_fg"
+    minus-emph-style = "$minus_fg_emph bold"
+    minus-non-emph-style = "$minus_fg"
     
-    plus-style = "syntax $plus_bg"
-    plus-emph-style = "syntax $plus_bg_emph"
-    plus-non-emph-style = "syntax $plus_bg"
+    plus-style = "$plus_fg"
+    plus-emph-style = "$plus_fg_emph bold"
+    plus-non-emph-style = "$plus_fg"
     
     zero-style = "$zero_fg"
     
