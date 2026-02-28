@@ -1,0 +1,245 @@
+#!/bin/bash
+# Apply Omarchy theme colors to delta (git diff pager)
+
+set -euo pipefail
+
+OMARCHY_THEMES_DIR="$HOME/.local/share/omarchy/themes"
+OMARCHY_CURRENT_THEME="$HOME/.config/omarchy/current/theme"
+DELTA_THEMES_DIR="$HOME/.config/delta/themes"
+DELTA_THEME_FILE="$DELTA_THEMES_DIR/omarchy.gitconfig"
+
+# Color manipulation functions
+hex_to_rgb() {
+  local hex="$1"
+  hex="${hex#\#}"
+  local r=$((16#${hex:0:2}))
+  local g=$((16#${hex:2:2}))
+  local b=$((16#${hex:4:2}))
+  echo "$r $g $b"
+}
+
+rgb_to_hex() {
+  local r="$1" g="$2" b="$3"
+  printf "#%02x%02x%02x" "$r" "$g" "$b"
+}
+
+lighten_color() {
+  local hex="$1"
+  local factor="${2:-20}"
+  
+  read -r r g b <<< "$(hex_to_rgb "$hex")"
+  
+  r=$(( r + (255 - r) * factor / 100 ))
+  g=$(( g + (255 - g) * factor / 100 ))
+  b=$(( b + (255 - b) * factor / 100 ))
+  
+  r=$((r > 255 ? 255 : r))
+  g=$((g > 255 ? 255 : g))
+  b=$((b > 255 ? 255 : b))
+  
+  rgb_to_hex "$r" "$g" "$b"
+}
+
+darken_color() {
+  local hex="$1"
+  local factor="${2:-20}"
+  
+  read -r r g b <<< "$(hex_to_rgb "$hex")"
+  
+  local multiplier=$((100 - factor))
+  r=$((r * multiplier / 100))
+  g=$((g * multiplier / 100))
+  b=$((b * multiplier / 100))
+  
+  r=$((r < 0 ? 0 : r))
+  g=$((g < 0 ? 0 : g))
+  b=$((b < 0 ? 0 : b))
+  
+  rgb_to_hex "$r" "$g" "$b"
+}
+
+apply_alpha() {
+  local hex="$1"
+  local alpha_percent="$2"
+  local alpha=$((255 * alpha_percent / 100))
+  printf "%s%02x" "$hex" "$alpha"
+}
+
+# Get theme name from argument or current theme
+get_theme_name() {
+  if [[ -n "${1:-}" ]]; then
+    echo "$1"
+    return
+  fi
+  
+  local theme_name_file="$HOME/.config/omarchy/current/theme.name"
+  if [[ -f "$theme_name_file" ]]; then
+    cat "$theme_name_file"
+    return
+  fi
+  
+  if [[ -L "$OMARCHY_CURRENT_THEME" ]]; then
+    basename "$(readlink "$OMARCHY_CURRENT_THEME")"
+    return
+  fi
+  
+  echo "catppuccin"
+}
+
+# Parse colors.toml
+parse_colors() {
+  local theme_name="$1"
+  local colors_file="$OMARCHY_THEMES_DIR/$theme_name/colors.toml"
+  
+  if [[ ! -f "$colors_file" ]]; then
+    echo "Error: Colors file not found: $colors_file" >&2
+    exit 1
+  fi
+  
+  declare -gA COLORS
+  while IFS='=' read -r key value; do
+    key="${key//[\"\' ]/}"
+    [[ $key && $key != \#* ]] || continue
+    value="${value#*[\"\']}"
+    value="${value%%[\"\']*}"
+    COLORS["$key"]="$value"
+  done < "$colors_file"
+}
+
+# Generate delta theme config
+generate_delta_theme() {
+  local bg="${COLORS[background]}"
+  local fg="${COLORS[foreground]}"
+  local color1="${COLORS[color1]}"
+  local color2="${COLORS[color2]}"
+  local color3="${COLORS[color3]}"
+  local color4="${COLORS[color4]}"
+  local color5="${COLORS[color5]}"
+  local accent="${COLORS[accent]}"
+  
+  # Determine if light or dark theme
+  bg_r=$((16#${bg:1:2}))
+  bg_g=$((16#${bg:3:2}))
+  bg_b=$((16#${bg:5:2}))
+  bg_brightness=$((bg_r + bg_g + bg_b))
+  
+  local is_light="false"
+  if [[ $bg_brightness -gt 382 ]]; then
+    is_light="true"
+  fi
+  
+  # Generate background colors for minus/plus
+  local minus_bg plus_bg minus_bg_emph plus_bg_emph zero_fg
+  local file_style hunk_style
+  
+  if [[ "$is_light" == "true" ]]; then
+    # Light theme - use darker colors for diff
+    minus_bg=$(darken_color "$color1" 25)
+    plus_bg=$(darken_color "$color2" 25)
+    minus_bg_emph=$(darken_color "$color1" 35)
+    plus_bg_emph=$(darken_color "$color2" 35)
+    zero_fg=$(darken_color "$fg" 30)
+    file_style="$accent"
+    hunk_style="$color3"
+  else
+    # Dark theme - use lighter/transparent colors
+    minus_bg=$(apply_alpha "$(lighten_color "$color1" 15)" 25)
+    plus_bg=$(apply_alpha "$(lighten_color "$color2" 15)" 25)
+    minus_bg_emph=$(apply_alpha "$(lighten_color "$color1" 25)" 35)
+    plus_bg_emph=$(apply_alpha "$(lighten_color "$color2" 25)" 35)
+    zero_fg="$fg"
+    file_style="$accent"
+    hunk_style="$color3"
+  fi
+  
+  # Generate blame palette (3 variations of background)
+  local blame1 blame2 blame3
+  if [[ "$is_light" == "true" ]]; then
+    blame1=$(darken_color "$bg" 3)
+    blame2=$(darken_color "$bg" 6)
+    blame3=$(darken_color "$bg" 9)
+  else
+    blame1=$(lighten_color "$bg" 3)
+    blame2=$(lighten_color "$bg" 6)
+    blame3=$(lighten_color "$bg" 9)
+  fi
+  
+  # Generate config
+  cat > "$DELTA_THEME_FILE" << EOF
+# Delta theme generated from Omarchy theme
+# Do not edit manually - this file is auto-generated
+
+[delta]
+    # Diff colors
+    minus-style = "syntax $minus_bg"
+    minus-emph-style = "syntax $minus_bg_emph"
+    minus-non-emph-style = "syntax $minus_bg"
+    
+    plus-style = "syntax $plus_bg"
+    plus-emph-style = "syntax $plus_bg_emph"
+    plus-non-emph-style = "syntax $plus_bg"
+    
+    zero-style = "$zero_fg"
+    
+    # UI colors
+    file-style = "$file_style"
+    hunk-header-style = "$hunk_style"
+    grep-file-style = "$color5"
+    grep-line-number-style = "$color3"
+    
+    # Blame
+    blame-palette = "$blame1 $blame2 $blame3"
+    
+    # Settings
+    true-color = always
+EOF
+  
+  echo "Generated delta theme: $DELTA_THEME_FILE"
+}
+
+# Ensure include is in gitconfig
+ensure_gitconfig_include() {
+  local gitconfig="$HOME/.gitconfig"
+  local include_line="[include]"
+  local path_line="    path = $DELTA_THEME_FILE"
+  
+  # Create gitconfig if it doesn't exist
+  if [[ ! -f "$gitconfig" ]]; then
+    touch "$gitconfig"
+  fi
+  
+  # Check if include already exists
+  if grep -qF "$DELTA_THEME_FILE" "$gitconfig" 2>/dev/null; then
+    echo "Include already present in gitconfig"
+    return 0
+  fi
+  
+  # Add include section
+  {
+    echo ""
+    echo "# >>> omarchy-delta-theme-sync >>>"
+    echo "$include_line"
+    echo "$path_line"
+    echo "# <<< omarchy-delta-theme-sync <<<"
+  } >> "$gitconfig"
+  
+  echo "Added include to gitconfig"
+}
+
+# Main
+main() {
+  local theme_name
+  theme_name=$(get_theme_name "$@")
+  
+  echo "Applying Omarchy theme to delta: $theme_name"
+  
+  mkdir -p "$DELTA_THEMES_DIR"
+  
+  parse_colors "$theme_name"
+  generate_delta_theme
+  ensure_gitconfig_include
+  
+  echo "✓ Delta theme applied successfully"
+}
+
+main "$@"

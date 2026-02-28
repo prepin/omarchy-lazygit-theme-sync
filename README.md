@@ -369,3 +369,102 @@ For issues specific to this package, please open an issue in the repository wher
 For Omarchy-specific issues, visit: https://omarchy.org/
 
 For lazygit issues, visit: https://github.com/jesseduffield/lazygit
+
+## Delta (Git Diff) Theme Sync
+
+As of version 2.0, this package also includes **delta theme synchronization**!
+
+### What is Delta?
+
+Delta is a syntax-highlighting pager for git diff output. It makes git diffs more readable with colors and formatting.
+
+### Features
+
+- **Automatic sync**: Delta colors update when you change Omarchy themes
+- **Syntax highlighting**: Code syntax is highlighted with your theme colors
+- **Smart contrast**: Colors are adjusted for light/dark themes automatically
+- **Non-destructive**: Uses gitconfig include, doesn't modify your main config
+
+### Delta Colors
+
+Delta uses these Omarchy theme colors:
+
+| Delta Element | Omarchy Color | Description |
+|---------------|---------------|-------------|
+| **minus-style** | color1 (red) | Removed lines |
+| **plus-style** | color2 (green) | Added lines |
+| **file-style** | accent | File names |
+| **hunk-header-style** | color3 (yellow) | Hunk headers |
+| **grep-file-style** | color5 (magenta) | Grep results |
+
+### How It Works
+
+1. Script generates `~/.config/delta/themes/omarchy.gitconfig`
+2. Adds include to `~/.gitconfig`
+3. Delta automatically uses theme on next run
+
+### For Dark Themes
+
+- Uses alpha transparency for backgrounds
+- Lighter variations of red/green for visibility
+- Example: `#f49cb53f` (red with 25% alpha)
+
+### For Light Themes
+
+- Uses darker solid colors for contrast
+- Darker variations of red/green
+- Example: `#9d0b2a` (dark red)
+
+### Testing
+
+Test delta theme:
+
+```bash
+# Create test files
+echo "test line 1" > /tmp/test1.txt
+echo "test line 1 modified" > /tmp/test2.txt
+echo "test line 2" >> /tmp/test2.txt
+
+# View diff with delta
+delta /tmp/test1.txt /tmp/test2.txt
+```
+
+### Manual Theme Application
+
+```bash
+# Apply specific theme
+~/.local/bin/omarchy-delta-theme-apply catppuccin
+
+# Apply current Omarchy theme
+~/.local/bin/omarchy-delta-theme-apply
+```
+
+### Customization
+
+Delta theme file is auto-generated. To customize:
+
+1. Edit `~/.local/bin/omarchy-delta-theme-apply`
+2. Modify color mappings in `generate_delta_theme()` function
+3. Run script to regenerate theme
+
+### Disabling Delta Theme Sync
+
+To disable delta theme sync:
+
+1. Remove hook from `~/.config/omarchy/hooks/theme-set`:
+   ```bash
+   sed -i '/# >>> omarchy-delta-theme-sync hook >>>/,/# <<< omarchy-delta-theme-sync hook <<</d' \
+     ~/.config/omarchy/hooks/theme-set
+   ```
+
+2. Remove include from `~/.gitconfig`:
+   ```bash
+   sed -i '/# >>> omarchy-delta-theme-sync >>>/,/# <<< omarchy-delta-theme-sync <<</d' \
+     ~/.gitconfig
+   ```
+
+3. Delete delta theme:
+   ```bash
+   rm ~/.config/delta/themes/omarchy.gitconfig
+   ```
+
