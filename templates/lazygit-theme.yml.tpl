@@ -1,24 +1,24 @@
-theme:
-  activeBorderColor:
-    - '{{ accent }}'
-    - bold
-  inactiveBorderColor:
-    - '{{ foreground }}'
-  optionsTextColor:
-    - '{{ accent }}'
-  selectedLineBgColor:
-    - '{{ selection_background }}'
-  cherryPickedCommitBgColor:
-    - '{{ selection_background }}'
-  cherryPickedCommitFgColor:
-    - '{{ accent }}'
-  unstagedChangesColor:
-    - '{{ color1 }}'
-  defaultFgColor:
-    - '{{ foreground }}'
-  searchingActiveBorderColor:
-    - '{{ color3 }}'
-    - bold
-
-authorColors:
-  '*': '{{ accent }}'
+gui:
+  theme:
+    activeBorderColor:
+      - '{{ activeBorderColor }}'
+      - bold
+    inactiveBorderColor:
+      - '{{ inactiveBorderColor }}'
+    optionsTextColor:
+      - '{{ optionsTextColor }}'
+    selectedLineBgColor:
+      - '{{ selectedLineBgColor }}'
+    cherryPickedCommitBgColor:
+      - '{{ cherryPickedCommitBgColor }}'
+    cherryPickedCommitFgColor:
+      - '{{ cherryPickedCommitFgColor }}'
+    unstagedChangesColor:
+      - '{{ unstagedChangesColor }}'
+    defaultFgColor:
+      - '{{ defaultFgColor }}'
+    searchingActiveBorderColor:
+      - '{{ searchingActiveBorderColor }}'
+      - bold
+    authorColors:
+      '*': '{{ authorColors }}'

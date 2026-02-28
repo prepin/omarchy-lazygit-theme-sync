@@ -1,18 +1,12 @@
 #!/bin/bash
-# Generate lazygit theme from Omarchy colors.toml
+# Generate lazygit theme from Omarchy colors.toml using theme presets
 
 COLORS_FILE=$1
-TEMPLATE="$HOME/.local/share/omarchy-lazygit-theme-sync/lazygit-theme.yml.tpl"
+PRESETS_SCRIPT="$(dirname "$0")/../theme-mappings/presets.sh"
 
 # Check if colors file exists
 if [[ ! -f "$COLORS_FILE" ]]; then
   echo "Error: Colors file not found: $COLORS_FILE"
-  exit 1
-fi
-
-# Check if template exists
-if [[ ! -f "$TEMPLATE" ]]; then
-  echo "Error: Template file not found: $TEMPLATE"
   exit 1
 fi
 
@@ -26,13 +20,45 @@ while IFS='=' read -r key value; do
   colors["$key"]="$value"
 done <"$COLORS_FILE"
 
-# Create sed script for template substitution
-sed_script=$(mktemp)
-for key in "${!colors[@]}"; do
-  printf 's|{{ %s }}|%s|g\n' "$key" "${colors[$key]}" >> "$sed_script"
-  printf 's|{{ %s_strip }}|%s|g\n' "$key" "${colors[$key]#\#}" >> "$sed_script"
-done
+# Determine theme name from colors file path
+theme_name=$(basename "$(dirname "$COLORS_FILE")")
 
-# Apply template and clean up
-sed -f "$sed_script" "$TEMPLATE"
-rm "$sed_script"
+# Get preset mapping for this theme
+preset_output=$("$PRESETS_SCRIPT" "$theme_name")
+
+# Parse preset into associative array
+declare -A mapping
+while IFS=':' read -r key value; do
+  key="${key// /}"
+  [[ $key ]] || continue
+  value="${value// /}"
+  mapping["$key"]="$value"
+done <<< "$preset_output"
+
+# Output lazygit theme directly (no template)
+cat << THEME
+gui:
+  theme:
+    activeBorderColor:
+      - '${colors[${mapping[activeBorderColor]}]}'
+      - bold
+    inactiveBorderColor:
+      - '${colors[${mapping[inactiveBorderColor]}]}'
+    optionsTextColor:
+      - '${colors[${mapping[optionsTextColor]}]}'
+    selectedLineBgColor:
+      - '${colors[${mapping[selectedLineBgColor]}]}'
+    cherryPickedCommitBgColor:
+      - '${colors[${mapping[cherryPickedCommitBgColor]}]}'
+    cherryPickedCommitFgColor:
+      - '${colors[${mapping[cherryPickedCommitFgColor]}]}'
+    unstagedChangesColor:
+      - '${colors[${mapping[unstagedChangesColor]}]}'
+    defaultFgColor:
+      - '${colors[${mapping[defaultFgColor]}]}'
+    searchingActiveBorderColor:
+      - '${colors[${mapping[searchingActiveBorderColor]}]}'
+      - bold
+    authorColors:
+      '*': '${colors[${mapping[authorColors]}]}'
+THEME

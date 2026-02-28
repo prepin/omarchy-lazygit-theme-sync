@@ -142,30 +142,30 @@ omarchy-lazygit-theme-apply my-theme
 The lazygit theme config follows the official lazygit theme format:
 
 ```yaml
-theme:
-  activeBorderColor:
-    - '#7aa2f7'
-    - bold
-  inactiveBorderColor:
-    - '#a9b1d6'
-  optionsTextColor:
-    - '#7aa2f7'
-  selectedLineBgColor:
-    - '#7aa2f7'
-  cherryPickedCommitBgColor:
-    - '#7aa2f7'
-  cherryPickedCommitFgColor:
-    - '#7aa2f7'
-  unstagedChangesColor:
-    - '#f7768e'
-  defaultFgColor:
-    - '#a9b1d6'
-  searchingActiveBorderColor:
-    - '#e0af68'
-    - bold
-
-authorColors:
-  '*': '#7aa2f7'
+gui:
+  theme:
+    activeBorderColor:
+      - '#7aa2f7'
+      - bold
+    inactiveBorderColor:
+      - '#a9b1d6'
+    optionsTextColor:
+      - '#7aa2f7'
+    selectedLineBgColor:
+      - '#7aa2f7'
+    cherryPickedCommitBgColor:
+      - '#7aa2f7'
+    cherryPickedCommitFgColor:
+      - '#7aa2f7'
+    unstagedChangesColor:
+      - '#f7768e'
+    defaultFgColor:
+      - '#a9b1d6'
+    searchingActiveBorderColor:
+      - '#e0af68'
+      - bold
+    authorColors:
+      '*': '#7aa2f7'
 ```
 
 ### Color Mapping (Generated Themes)
