@@ -76,11 +76,12 @@ bg_b=$((16#${bg:5:2}))
 bg_brightness=$((bg_r + bg_g + bg_b))
 
 # Calculate derivative colors based on theme type
+# Max brightness = 765 (255*3). Light themes have brightness > 382, dark themes < 382
 if [[ $bg_brightness -gt 382 ]]; then
-  # Light theme - darken for selection
+  # Light theme - darken background for selection (good contrast)
   selected_bg=$(darken_color "$bg" 4)
 else
-  # Dark theme - lighten for selection
+  # Dark theme - lighten background for selection (good contrast)
   selected_bg=$(lighten_color "$bg" 10)
 fi
 

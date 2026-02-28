@@ -21,9 +21,14 @@ THEME_SOURCE=""
 if [[ -f "$LIGHT_MODE_FILE" ]]; then
   # Try light variant first for light themes
   LIGHT_THEME="${THEME_NAME}-light"
-  if [[ -f "$BUNDLED_THEMES/$LIGHT_THEME.yml" ]]; then
-    THEME_SOURCE="$BUNDLED_THEMES/$LIGHT_THEME.yml"
+  
+  # Check patterns: theme-name-light.yml, theme-name-latte.yml, theme-name.yml
+  if [[ -f "$BUNDLED_THEMES/${LIGHT_THEME}.yml" ]]; then
+    THEME_SOURCE="$BUNDLED_THEMES/${LIGHT_THEME}.yml"
     echo "Using bundled light theme: $LIGHT_THEME"
+  elif [[ -f "$BUNDLED_THEMES/${THEME_NAME}-latte.yml" ]]; then
+    THEME_SOURCE="$BUNDLED_THEMES/${THEME_NAME}-latte.yml"
+    echo "Using bundled latte theme: ${THEME_NAME}-latte"
   elif [[ -f "$BUNDLED_THEMES/$THEME_NAME.yml" ]]; then
     THEME_SOURCE="$BUNDLED_THEMES/$THEME_NAME.yml"
     echo "Using bundled theme: $THEME_NAME"
