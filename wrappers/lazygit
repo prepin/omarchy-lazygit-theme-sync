@@ -1,0 +1,17 @@
+#!/bin/bash
+# Omarchy lazygit wrapper - loads theme config automatically
+
+MAIN_CONFIG="$HOME/.config/lazygit/config.yml"
+THEME_CONFIG="$HOME/.config/lazygit/theme.yml"
+LAZYGIT_BIN="/usr/bin/lazygit"
+
+# Build config file list
+CONFIG_FILES="$MAIN_CONFIG"
+
+# Add theme config if it exists
+if [[ -f "$THEME_CONFIG" ]]; then
+  CONFIG_FILES="$CONFIG_FILES,$THEME_CONFIG"
+fi
+
+# Launch lazygit with both config files
+exec "$LAZYGIT_BIN" --use-config-file="$CONFIG_FILES" "$@"

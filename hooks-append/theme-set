@@ -1,0 +1,7 @@
+
+# >>> omarchy-lazygit-theme-sync hook >>>
+# Apply lazygit theme on Omarchy theme change
+if [[ -f ~/.local/bin/omarchy-lazygit-theme-apply ]]; then
+  ~/.local/bin/omarchy-lazygit-theme-apply "$1"
+fi
+# <<< omarchy-lazygit-theme-sync hook <<<
