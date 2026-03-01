@@ -13,7 +13,7 @@ done
 
 # Remove lazygit wrapper
 if [[ -f ~/.local/bin/lazygit ]]; then
-  if head -1 ~/.local/bin/lazygit | grep -q "Omarchy lazygit wrapper"; then
+  if head -2 ~/.local/bin/lazygit | grep -q "Omarchy lazygit wrapper"; then
     rm ~/.local/bin/lazygit
     echo "✓ Removed lazygit wrapper"
   fi
