@@ -1,0 +1,12 @@
+pkgbase = omarchy-lazygit-theme-sync
+	pkgdesc = Automatic lazygit theme synchronization for Omarchy
+	pkgver = 1.0.0
+	pkgrel = 1
+	arch = any
+	license = MIT
+	depends = bash
+	depends = lazygit
+	source = omarchy-lazygit-theme-sync-1.0.0.tar.gz
+	md5sums = SKIP
+
+pkgname = omarchy-lazygit-theme-sync

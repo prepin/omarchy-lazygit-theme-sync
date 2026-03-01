@@ -1,9 +1,10 @@
 #!/bin/bash
-# Generate all lazygit themes from Omarchy themes using preset-based generator
+# Generate all lazygit themes from Omarchy themes
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 OMARCHY_THEMES="$HOME/.local/share/omarchy/themes"
-OUTPUT_DIR="$HOME/Work/tries/2026-02-28-omarch-lazygit-theme-sync/themes"
-GENERATOR="$HOME/Work/tries/2026-02-28-omarch-lazygit-theme-sync/scripts/lazygit-theme-generate.sh"
+OUTPUT_DIR="$SCRIPT_DIR/themes"
+GENERATOR="$SCRIPT_DIR/scripts/lazygit-theme-generate.sh"
 
 mkdir -p "$OUTPUT_DIR"
 
@@ -18,12 +19,9 @@ generate_theme() {
   fi
 
   echo "Generating theme for: $theme_name"
-
-  # Use the preset-based generator
   "$GENERATOR" "$colors_file" > "$output_file"
 }
 
-# Generate themes for all Omarchy themes
 themes=(
   "catppuccin"
   "catppuccin-latte"
