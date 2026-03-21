@@ -38,18 +38,18 @@ log_error() {
     echo -e "${RED}[ERROR]${NC} $*" >&2
 }
 
-# Check if PATH contains ~/.local/bin before /usr/bin
+# Check if PATH contains ~/.local/bin
 check_path() {
     case ":$PATH:" in
         *:"$USER_BIN_DIR":*)
             # Check if it's before /usr/bin
             if [[ "$PATH" =~ "$USER_BIN_DIR"[^\:]*usr/bin ]]; then
-                return 0
+                log_success "PATH is correctly configured"
             else
                 log_warn "$USER_BIN_DIR is in PATH but after /usr/bin"
                 log_warn "System lazygit may take precedence"
-                return 1
             fi
+            return 0
             ;;
         *)
             log_error "$USER_BIN_DIR is not in PATH"
@@ -67,9 +67,9 @@ setup() {
     # Check PATH
     check_path || {
         echo ""
-        log_error "PATH check failed. Please fix your PATH before continuing."
-        log_error "Ensure ~/.local/bin is before /usr/bin in your PATH."
-        exit 1
+        log_warn "PATH check failed. Setup will continue but the wrapper may not be found."
+        log_warn "Ensure ~/.local/bin is in your PATH after installation."
+        echo ""
     }
 
     # Create directories
