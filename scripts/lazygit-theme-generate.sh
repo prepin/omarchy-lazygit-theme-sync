@@ -1,22 +1,88 @@
 #!/bin/bash
-# Generate lazygit theme using omazed approach with derivative colors
+# Generate lazygit theme using derivative colors
+
+set -euo pipefail
 
 COLORS_FILE=$1
 
+log_error() {
+  echo "[ERROR] $*" >&2
+}
+
 if [[ ! -f "$COLORS_FILE" ]]; then
-  echo "Error: Colors file not found: $COLORS_FILE"
+  log_error "Colors file not found: $COLORS_FILE"
   exit 1
 fi
 
-# Parse colors.toml
+validate_colors() {
+  local required=(background foreground color1 color3 accent)
+  local key
+
+  for key in "${required[@]}"; do
+    if [[ -z "${colors[$key]:-}" ]]; then
+      log_error "Missing required color '$key'"
+      exit 1
+    fi
+  done
+}
+
+parse_colors_toml() {
+  while IFS='=' read -r key value; do
+    key="${key//[\"\' ]/}"
+    [[ $key && $key != \#* ]] || continue
+    value="${value#*[\"\']}"
+    value="${value%%[\"\']*}"
+    colors["$key"]="$value"
+  done <"$COLORS_FILE"
+
+  validate_colors
+}
+
+parse_alacritty_toml() {
+  local section=""
+
+  while IFS= read -r line; do
+    if [[ $line =~ ^[[:space:]]*\[(.+)\][[:space:]]*$ ]]; then
+      section="${BASH_REMATCH[1]}"
+      continue
+    fi
+
+    if [[ $line =~ ^[[:space:]]*([a-zA-Z_]+)[[:space:]]*=[[:space:]]*\"(#[0-9A-Fa-f]{6})\"[[:space:]]*$ ]]; then
+      local key="${BASH_REMATCH[1]}"
+      local value="${BASH_REMATCH[2]}"
+      case "$section.$key" in
+        colors.primary.background) colors[background]="$value" ;;
+        colors.primary.foreground) colors[foreground]="$value" ;;
+        colors.normal.red) colors[color1]="$value" ;;
+        colors.normal.green) colors[color2]="$value" ;;
+        colors.normal.yellow) colors[color3]="$value" ;;
+        colors.normal.blue)
+          colors[color4]="$value"
+          colors[accent]="$value"
+          ;;
+        colors.normal.magenta) colors[color5]="$value" ;;
+      esac
+    fi
+  done <"$COLORS_FILE"
+
+  if [[ -z "${colors[accent]:-}" && -n "${colors[color4]:-}" ]]; then
+    colors[accent]="${colors[color4]}"
+  fi
+
+  validate_colors
+}
+
 declare -A colors
-while IFS='=' read -r key value; do
-  key="${key//[\"\' ]/}"
-  [[ $key && $key != \#* ]] || continue
-  value="${value#*[\"\']}"
-  value="${value%%[\"\']*}"
-  colors["$key"]="$value"
-done <"$COLORS_FILE"
+if [[ "$COLORS_FILE" == *.toml ]]; then
+  if grep -q '^\[colors\.' "$COLORS_FILE"; then
+    parse_alacritty_toml
+  else
+    parse_colors_toml
+  fi
+else
+  log_error "Unsupported color file format: $COLORS_FILE"
+  exit 1
+fi
 
 # Color manipulation functions
 hex_to_rgb() {

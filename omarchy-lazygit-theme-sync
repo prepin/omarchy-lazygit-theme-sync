@@ -2,7 +2,7 @@
 
 set -euo pipefail
 
-VERSION="1.0.0"
+VERSION="1.1.0"
 
 # Paths
 PKG_DIR="/usr/share/omarchy-lazygit-theme-sync"

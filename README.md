@@ -5,7 +5,7 @@ Automatic theme synchronization for lazygit with Omarchy themes.
 ## Features
 - Automatic sync when Omarchy theme changes
 - 17 bundled lazygit themes
-- Generate themes from colors.toml
+- Generate themes from `colors.toml` with `alacritty.toml` fallback
 - Live reload with wrapper script
 
 ## Requirements
